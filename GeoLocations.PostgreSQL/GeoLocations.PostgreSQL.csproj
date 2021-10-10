@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\GeoLocations.Abstractions\GeoLocations.Abstractions.csproj" />
+      <ProjectReference Include="..\GeoLocations.Core\GeoLocations.Core.csproj" />
+      <ProjectReference Include="..\GeoLocations.Dao\GeoLocations.Dao.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.10" />
+    </ItemGroup>
+
+</Project>
