@@ -8,6 +8,7 @@
       <ProjectReference Include="..\GeoLocations.Abstractions\GeoLocations.Abstractions.csproj" />
       <ProjectReference Include="..\GeoLocations.Core\GeoLocations.Core.csproj" />
       <ProjectReference Include="..\GeoLocations.Dao\GeoLocations.Dao.csproj" />
+      <ProjectReference Include="..\GeoLocations.Infrastructure\GeoLocations.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>

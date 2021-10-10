@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GeoLocations.Abstractions.Services;
 using GeoLocations.Core.Models;
+using GeoLocations.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace GeoLocations.WebAPI.Controllers
 {
 	[ApiController]
-	[Route("geolocations")]
+	[Route("api/v1/geolocations")]
 	public class GeoLocationsController : ControllerBase
 	{
 		#region Services
 
 		private readonly IGeoLocationService geoLocationService;
-		private readonly ILogger<GeoLocationsController> _logger;
+		private readonly ILogger<GeoLocationsController> logger;
 
 		#endregion
 		
@@ -29,7 +30,7 @@ namespace GeoLocations.WebAPI.Controllers
 		public GeoLocationsController(IGeoLocationService geoLocationService, ILogger<GeoLocationsController> logger)
 		{
 			this.geoLocationService = geoLocationService;
-			this._logger = logger;
+			this.logger = logger;
 		}
 
 		#endregion
@@ -58,7 +59,7 @@ namespace GeoLocations.WebAPI.Controllers
 			}
 			catch (Exception ex)
 			{
-				this._logger.Log(LogLevel.Error, ex.Message);
+				this.logger.LogException(ex);
 				return this.StatusCode(500, ex);
 			}
 		}

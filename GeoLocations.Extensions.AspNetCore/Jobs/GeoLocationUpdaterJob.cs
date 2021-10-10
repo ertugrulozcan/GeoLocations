@@ -47,31 +47,31 @@ namespace GeoLocations.Extensions.AspNetCore.Jobs
 
 			try
 			{
-				this.logger.Log(LogLevel.Information, "GeoLocationUpdaterJob started.");
-				this.logger.Log(LogLevel.Information, "GeoLocation data fetching from master data provider...");
+				this.logger.Info("GeoLocationUpdaterJob started.");
+				this.logger.Info("GeoLocation data fetching from master data provider...");
 
 				var data = await this.masterDatabaseProvider.GetDataAsync();
 				if (data != null)
 				{
-					this.logger.Log(LogLevel.Information, "GeoLocation data fetched.");
-					this.logger.Log(LogLevel.Information, "Clearing operation started...");
+					this.logger.Info("GeoLocation data fetched.");
+					this.logger.Info("Clearing operation started...");
 
 					var isCleared = await this.geoLocationService.ClearAllAsync();
 					if (isCleared)
 					{
-						this.logger.Log(LogLevel.Information, "Clearing operation completed.");
-						this.logger.Log(LogLevel.Information, "Loading operation started...");
+						this.logger.Info("Clearing operation completed.");
+						this.logger.Info("Loading operation started...");
 
 						await this.geoLocationService.LoadAsync(data);
 					}
 					else
 					{
-						this.logger.Log(LogLevel.Error, "Clearing operation failed!");
+						this.logger.Error("Clearing operation failed!");
 					}
 				}
 				else
 				{
-					this.logger.Log(LogLevel.Error, "Data could not fetched from master data provider!");
+					this.logger.Error("Data could not fetched from master data provider!");
 				}
 			}
 			catch (Exception ex)
@@ -82,8 +82,8 @@ namespace GeoLocations.Extensions.AspNetCore.Jobs
 			{
 				stopwatch.Stop();
 				
-				this.logger.Log(LogLevel.Information, "GeoLocationUpdaterJob finished.");
-				this.logger.Log(LogLevel.Information, $"Elapsed time: {stopwatch.Elapsed.ToHumanReadableString()}");
+				this.logger.Info("GeoLocationUpdaterJob finished.");
+				this.logger.Info($"Elapsed time: {stopwatch.Elapsed.ToHumanReadableString()}");
 			}
 		}
 

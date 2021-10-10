@@ -7,6 +7,16 @@ namespace GeoLocations.Infrastructure.Extensions
 	{
 		#region Methods
 
+		public static void Info<T>(this ILogger<T> logger, string message)
+		{
+			logger.Log(LogLevel.Information, $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] {message}");
+		}
+
+		public static void Error<T>(this ILogger<T> logger, string message)
+		{
+			logger.Log(LogLevel.Error, $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] {message}");
+		}
+
 		public static void LogException<T>(this ILogger<T> logger, Exception ex)
 		{
 			if (ex != null)
