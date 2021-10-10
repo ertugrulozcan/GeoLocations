@@ -7,6 +7,7 @@ using GeoLocations.Abstractions.Configuration;
 using GeoLocations.Core.Extensions;
 using GeoLocations.Core.Models;
 using GeoLocations.Dao.Repositories;
+using GeoLocations.Infrastructure.Extensions;
 using GeoLocations.PostgreSQL.Extensions;
 using GeoLocations.PostgreSQL.Models;
 using Microsoft.EntityFrameworkCore;
@@ -50,7 +51,21 @@ namespace GeoLocations.PostgreSQL.Repositories
 		public async ValueTask<GeoLocation> FindAsync(string ip)
 		{
 			var database = this.repositoryContextFactory.ResolveRepositoryContext();
-			var entity = await database.GeoLocations.FirstOrDefaultAsync(x => x.IP == ip);
+			var query = database.GeoLocations
+				.Include(x => x.City)
+				.ThenInclude(x => x.Names)
+				.Include(x => x.Continent)
+				.ThenInclude(x => x.Names)
+				.Include(x => x.Country)
+				.ThenInclude(x => x.Names)
+				.Include(x => x.County)
+				.ThenInclude(x => x.Names)
+				.Include(x => x.Region)
+				.ThenInclude(x => x.Names)
+				.AsSplitQuery()
+				.AsNoTracking();
+
+			var entity = await query.FirstOrDefaultAsync(x => x.IP == ip);
 			return entity?.ToModel();
 		}
 
@@ -71,8 +86,8 @@ namespace GeoLocations.PostgreSQL.Repositories
 		{
 			try
 			{
-				const int BATCH_SIZE = 10000;
-				this.logger.Log(LogLevel.Information, "Data extracting...");
+				const int BATCH_SIZE = 5000;
+				this.logger.Info("Data extracting...");
 				var entities = items.Select(x => x.ToEntity());
 				var batches = entities.Batch(BATCH_SIZE).ToArray();
 				
@@ -83,15 +98,15 @@ namespace GeoLocations.PostgreSQL.Repositories
 					foreach (var batch in batches)
 					{
 						await BatchInsertAsync(context, batch);
-						this.logger.Log(LogLevel.Information, $"Batch {batchNo++} completed (Elapsed {stopwatch.Elapsed.ToHumanReadableString()})");
-						this.logger.Log(LogLevel.Information, $"Completed %{((batchNo - 1) * 100.0d / batches.Length):F2}");
+						this.logger.Info($"Batch {batchNo++} completed (Elapsed {stopwatch.Elapsed.ToHumanReadableString()})");
+						this.logger.Info($"Completed %{((batchNo - 1) * 100.0d / batches.Length):F2}");
 						stopwatch.Restart();
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex);
+				this.logger.LogException(ex);
 				throw;
 			}
 		}
@@ -102,18 +117,19 @@ namespace GeoLocations.PostgreSQL.Repositories
 			{
 				try
 				{
-					this.logger.Log(LogLevel.Information, "Transaction started...");
+					this.logger.Info("Transaction started...");
 					context.ChangeTracker.AutoDetectChangesEnabled = false;
 					context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 					await context.GeoLocations.AddRangeAsync(array);
 					await context.SaveChangesAsync();
 					await transaction.CommitAsync();
-					this.logger.Log(LogLevel.Information, "Transaction completed");
+					this.logger.Info("Transaction completed");
 				}
 				catch (Exception ex)
 				{
 					await transaction.RollbackAsync();
-					this.logger.Log(LogLevel.Error, "Transaction failed: {ex}", ex);
+					this.logger.Error("Transaction failed: ");
+					this.logger.LogException(ex);
 				}
 			}
 		}
