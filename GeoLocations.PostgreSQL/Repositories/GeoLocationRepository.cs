@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GeoLocations.Abstractions.Configuration;
 using GeoLocations.Core.Extensions;
@@ -50,6 +51,16 @@ namespace GeoLocations.PostgreSQL.Repositories
 		
 		public async ValueTask<GeoLocation> FindAsync(string ip)
 		{
+			return await this.CancellableFindAsync(ip);
+		}
+		
+		public async ValueTask<GeoLocation> FindAsync(string ip, CancellationToken cancellationToken)
+		{
+			return await this.CancellableFindAsync(ip, cancellationToken);
+		}
+		
+		private async ValueTask<GeoLocation> CancellableFindAsync(string ip, CancellationToken? cancellationToken = null)
+		{
 			var database = this.repositoryContextFactory.ResolveRepositoryContext();
 			var query = database.GeoLocations
 				.Include(x => x.City)
@@ -65,24 +76,70 @@ namespace GeoLocations.PostgreSQL.Repositories
 				.AsSplitQuery()
 				.AsNoTracking();
 
-			var entity = await query.FirstOrDefaultAsync(x => x.IP == ip);
-			return entity?.ToModel();
+			if (cancellationToken == null)
+			{
+				var entity = await query.FirstOrDefaultAsync(x => x.IP == ip);
+				return entity?.ToModel();
+			}
+			else
+			{
+				var entity = await query.FirstOrDefaultAsync(x => x.IP == ip, cancellationToken.Value);
+				return entity?.ToModel();	
+			}
 		}
 
 		public async ValueTask InsertAsync(IEnumerable<GeoLocation> items)
 		{
+			await this.CancellableInsertAsync(items);
+		}
+		
+		public async ValueTask InsertAsync(IEnumerable<GeoLocation> items, CancellationToken cancellationToken)
+		{
+			await this.CancellableInsertAsync(items, cancellationToken);
+		}
+		
+		private async ValueTask CancellableInsertAsync(IEnumerable<GeoLocation> items, CancellationToken? cancellationToken = null)
+		{
 			var database = this.repositoryContextFactory.ResolveRepositoryContext();
 			var entities = items.Select(x => x.ToEntity());
-			await database.GeoLocations.AddRangeAsync(entities);
-			await database.SaveChangesAsync();
+			if (cancellationToken == null)
+			{
+				await database.GeoLocations.AddRangeAsync(entities);
+				await database.SaveChangesAsync();	
+			}
+			else
+			{
+				await database.GeoLocations.AddRangeAsync(entities, cancellationToken.Value);
+				await database.SaveChangesAsync(cancellationToken.Value);	
+			}
 		}
 
-		public ValueTask BulkInsertAsync(IEnumerable<GeoLocation> items)
+		public async ValueTask BulkInsertAsync(IEnumerable<GeoLocation> items)
+		{
+			await this.CancellableBulkInsertAsync(items);
+		}
+		
+		public async ValueTask BulkInsertAsync(IEnumerable<GeoLocation> items, CancellationToken cancellationToken)
+		{
+			await this.CancellableBulkInsertAsync(items, cancellationToken);
+		}
+		
+		private ValueTask CancellableBulkInsertAsync(IEnumerable<GeoLocation> items, CancellationToken? cancellationToken = null)
 		{
 			throw new NotImplementedException();
 		}
-		
+
 		public async ValueTask BatchInsertAsync(IEnumerable<GeoLocation> items)
+		{
+			await this.CancellableBatchInsertAsync(items);
+		}
+		
+		public async ValueTask BatchInsertAsync(IEnumerable<GeoLocation> items, CancellationToken cancellationToken)
+		{
+			await this.CancellableBatchInsertAsync(items, cancellationToken);
+		}
+		
+		private async ValueTask CancellableBatchInsertAsync(IEnumerable<GeoLocation> items, CancellationToken? cancellationToken = null)
 		{
 			try
 			{
@@ -97,7 +154,15 @@ namespace GeoLocations.PostgreSQL.Repositories
 					var stopwatch = Stopwatch.StartNew();
 					foreach (var batch in batches)
 					{
-						await BatchInsertAsync(context, batch);
+						if (cancellationToken == null)
+						{
+							await BatchInsertAsync(context, batch);
+						}
+						else
+						{
+							await BatchInsertAsync(context, batch, cancellationToken.Value);	
+						}
+						
 						this.logger.Info($"Batch {batchNo++} completed (Elapsed {stopwatch.Elapsed.ToHumanReadableString()})");
 						this.logger.Info($"Completed %{((batchNo - 1) * 100.0d / batches.Length):F2}");
 						stopwatch.Restart();
@@ -111,30 +176,75 @@ namespace GeoLocations.PostgreSQL.Repositories
 			}
 		}
 
-		public async ValueTask BatchInsertAsync(RepositoryContext context, GeoLocationEntity[] array)
+		private async ValueTask BatchInsertAsync(RepositoryContext context, GeoLocationEntity[] array)
 		{
-			await using (var transaction = await context.Database.BeginTransactionAsync())
+			await this.CancellableBatchInsertAsync(context, array);
+		}
+		
+		private async ValueTask BatchInsertAsync(RepositoryContext context, GeoLocationEntity[] array, CancellationToken cancellationToken)
+		{
+			await this.CancellableBatchInsertAsync(context, array, cancellationToken);
+		}
+		
+		private async ValueTask CancellableBatchInsertAsync(RepositoryContext context, GeoLocationEntity[] array, CancellationToken? cancellationToken = null)
+		{
+			if (cancellationToken == null)
 			{
-				try
+				await using (var transaction = await context.Database.BeginTransactionAsync())
 				{
-					this.logger.Info("Transaction started...");
-					context.ChangeTracker.AutoDetectChangesEnabled = false;
-					context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-					await context.GeoLocations.AddRangeAsync(array);
-					await context.SaveChangesAsync();
-					await transaction.CommitAsync();
-					this.logger.Info("Transaction completed");
+					try
+					{
+						this.logger.Info("Transaction started...");
+						context.ChangeTracker.AutoDetectChangesEnabled = false;
+						context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+						await context.GeoLocations.AddRangeAsync(array);
+						await context.SaveChangesAsync();
+						await transaction.CommitAsync();
+						this.logger.Info("Transaction completed");
+					}
+					catch (Exception ex)
+					{
+						await transaction.RollbackAsync();
+						this.logger.Error("Transaction failed: ");
+						this.logger.LogException(ex);
+					}
 				}
-				catch (Exception ex)
+			}
+			else
+			{
+				await using (var transaction = await context.Database.BeginTransactionAsync(cancellationToken.Value))
 				{
-					await transaction.RollbackAsync();
-					this.logger.Error("Transaction failed: ");
-					this.logger.LogException(ex);
-				}
+					try
+					{
+						this.logger.Info("Transaction started...");
+						context.ChangeTracker.AutoDetectChangesEnabled = false;
+						context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+						await context.GeoLocations.AddRangeAsync(array);
+						await context.SaveChangesAsync(cancellationToken.Value);
+						await transaction.CommitAsync(cancellationToken.Value);
+						this.logger.Info("Transaction completed");
+					}
+					catch (Exception ex)
+					{
+						await transaction.RollbackAsync(cancellationToken.Value);
+						this.logger.Error("Transaction failed: ");
+						this.logger.LogException(ex);
+					}
+				}	
 			}
 		}
 
 		public async ValueTask RawBinaryCopyAsync(byte[] bytes)
+		{
+			await CancellableRawBinaryCopyAsync(bytes);
+		}
+		
+		public async ValueTask RawBinaryCopyAsync(byte[] bytes, CancellationToken cancellationToken)
+		{
+			await CancellableRawBinaryCopyAsync(bytes, cancellationToken);
+		}
+		
+		private async ValueTask CancellableRawBinaryCopyAsync(byte[] bytes, CancellationToken? cancellationToken = null)
 		{
 			await using (var context = this.repositoryContextFactory.ResolveRepositoryContext())
 			{
@@ -144,21 +254,54 @@ namespace GeoLocations.PostgreSQL.Repositories
 				{
 					var destinationTableName = geoLocationEntityType.GetTableName();
 					var connectionString = this.geoLocationOptions.ConnectionString;
-					await RawBinaryCopyAsync(bytes, connectionString, destinationTableName);
+
+					if (cancellationToken == null)
+					{
+						await RawBinaryCopyAsync(bytes, connectionString, destinationTableName);
+					}
+					else
+					{
+						await RawBinaryCopyAsync(bytes, connectionString, destinationTableName, cancellationToken.Value);	
+					}
 				}
 			}
 		}
 		
 		private static async ValueTask RawBinaryCopyAsync(byte[] bytes, string connectionString, string destinationTableName)
 		{
+			await CancellableRawBinaryCopyAsync(bytes, connectionString, destinationTableName);
+		}
+		
+		private static async ValueTask RawBinaryCopyAsync(byte[] bytes, string connectionString, string destinationTableName, CancellationToken cancellationToken)
+		{
+			await CancellableRawBinaryCopyAsync(bytes, connectionString, destinationTableName, cancellationToken);
+		}
+		
+		private static async ValueTask CancellableRawBinaryCopyAsync(byte[] bytes, string connectionString, string destinationTableName, CancellationToken? cancellationToken = null)
+		{
 			try
 			{
 				await using (var connection = new NpgsqlConnection(connectionString))
 				{
-					await connection.OpenAsync();
+					if (cancellationToken == null)
+					{
+						await connection.OpenAsync();
+					}
+					else
+					{
+						await connection.OpenAsync(cancellationToken.Value);	
+					}
+					
 					await using (var outStream = connection.BeginRawBinaryCopy($"COPY \"{destinationTableName}\" FROM STDIN (FORMAT BINARY)")) 
 					{
-						outStream.Write(bytes, 0, bytes.Length);
+						if (cancellationToken == null)
+						{
+							await outStream.WriteAsync(bytes, 0, bytes.Length);
+						}
+						else
+						{
+							await outStream.WriteAsync(bytes, 0, bytes.Length, cancellationToken.Value);
+						}
 					}	
 				}
 			}
@@ -171,16 +314,41 @@ namespace GeoLocations.PostgreSQL.Repositories
 
 		public async ValueTask<bool> ClearAllAsync()
 		{
+			return await this.CancellableClearAllAsync();
+		}
+		
+		public async ValueTask<bool> ClearAllAsync(CancellationToken cancellationToken)
+		{
+			return await this.CancellableClearAllAsync(cancellationToken);
+		}
+		
+		private async ValueTask<bool> CancellableClearAllAsync(CancellationToken? cancellationToken = null)
+		{
 			try
 			{
 				var database = this.repositoryContextFactory.ResolveRepositoryContext();
 				var tableNames = database.GetTableNames();
 				foreach (var tableName in tableNames)
 				{
-					await database.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE public.\"{tableName}\" CASCADE");
+					if (cancellationToken == null)
+					{
+						await database.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE public.\"{tableName}\" CASCADE");
+					}
+					else
+					{
+						await database.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE public.\"{tableName}\" CASCADE", cancellationToken.Value);	
+					}
 				}
 
-				await database.SaveChangesAsync();
+				if (cancellationToken == null)
+				{
+					await database.SaveChangesAsync();
+				}
+				else
+				{
+					await database.SaveChangesAsync(cancellationToken.Value);	
+				}
+				
 				return true;
 			}
 			catch (Exception ex)

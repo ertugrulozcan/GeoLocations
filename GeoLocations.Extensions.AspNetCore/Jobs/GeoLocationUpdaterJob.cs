@@ -50,19 +50,19 @@ namespace GeoLocations.Extensions.AspNetCore.Jobs
 				this.logger.Info("GeoLocationUpdaterJob started.");
 				this.logger.Info("GeoLocation data fetching from master data provider...");
 
-				var data = await this.masterDatabaseProvider.GetDataAsync();
+				var data = await this.masterDatabaseProvider.GetDataAsync(cancellationToken: context.CancellationToken);
 				if (data != null)
 				{
 					this.logger.Info("GeoLocation data fetched.");
 					this.logger.Info("Clearing operation started...");
 
-					var isCleared = await this.geoLocationService.ClearAllAsync();
+					var isCleared = await this.geoLocationService.ClearAllAsync(context.CancellationToken);
 					if (isCleared)
 					{
 						this.logger.Info("Clearing operation completed.");
 						this.logger.Info("Loading operation started...");
 
-						await this.geoLocationService.LoadAsync(data);
+						await this.geoLocationService.LoadAsync(data, context.CancellationToken);
 					}
 					else
 					{

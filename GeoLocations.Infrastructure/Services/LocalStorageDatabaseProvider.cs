@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using GeoLocations.Abstractions.Services;
 using GeoLocations.Core.Models;
@@ -240,9 +241,16 @@ namespace GeoLocations.Infrastructure.Services
 			}
 		}
 		
-		public async Task<IEnumerable<GeoLocation>> GetDataAsync(int? skip = null!, int? limit = null!)
+		public async Task<IEnumerable<GeoLocation>> GetDataAsync(int? skip = null!, int? limit = null!, CancellationToken? cancellationToken = null)
 		{
-			return await Task.Run(() => this.GetData(skip, limit));
+			if (cancellationToken == null)
+			{
+				return await Task.Run(() => this.GetData(skip, limit));	
+			}
+			else
+			{
+				return await Task.Run(() => this.GetData(skip, limit), cancellationToken.Value);
+			}
 		}
 
 		#endregion
