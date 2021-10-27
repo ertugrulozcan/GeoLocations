@@ -6,7 +6,6 @@ using GeoLocations.Extensions.AspNetCore.Configuration;
 using GeoLocations.Extensions.AspNetCore.Jobs;
 using GeoLocations.Infrastructure.Services;
 using GeoLocations.PostgreSQL.Configuration;
-using GeoLocations.PostgreSQL.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
@@ -37,12 +36,13 @@ namespace GeoLocations.Extensions.AspNetCore
 		{
 			services.AddSingleton<IGeoLocationOptions>(options);
 			services.AddSingleton<IPostgreDatabaseSettings>(new PostgreDatabaseSettings { ConnectionString = options.ConnectionString });
-			services.AddDbContext<RepositoryContext>(context => 
+			services.AddDbContext<PostgreSQL.Repositories.RepositoryContext>(context => 
 					context.UseNpgsql(options.ConnectionString, b => b.MigrationsAssembly("GeoLocations.PostgreSQL")),
 				contextLifetime: ServiceLifetime.Transient, 
 				optionsLifetime: ServiceLifetime.Transient);
-			services.AddSingleton<IRepositoryContextFactory, RepositoryContextFactory>();
-			services.AddTransient<IGeoLocationRepository, GeoLocationRepository>();
+			services.AddSingleton<PostgreSQL.Repositories.IRepositoryContextFactory, PostgreSQL.Repositories.RepositoryContextFactory>();
+			services.AddTransient<IGeoLocationRepository, PostgreSQL.Repositories.GeoLocationRepository>();
+			services.AddTransient<IGeoLocationBatchWriterRepository, Dapper.Repositories.GeoLocationRepository>();
 			services.AddScoped<IGeoLocationService, GeoLocationService>();
 			services.AddSingleton<IMasterDatabaseProvider, LocalStorageDatabaseProvider>();
 

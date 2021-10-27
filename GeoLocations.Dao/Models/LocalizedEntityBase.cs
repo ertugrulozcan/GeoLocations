@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GeoLocations.PostgreSQL.Models
+namespace GeoLocations.Dao.Models
 {
 	public abstract class LocalizedEntityBase<TEntity> : EntityBase where TEntity : LocaleEntity
 	{

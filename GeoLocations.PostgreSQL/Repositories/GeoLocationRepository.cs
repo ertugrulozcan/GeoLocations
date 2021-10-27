@@ -9,8 +9,8 @@ using GeoLocations.Core.Extensions;
 using GeoLocations.Core.Models;
 using GeoLocations.Dao.Repositories;
 using GeoLocations.Infrastructure.Extensions;
-using GeoLocations.PostgreSQL.Extensions;
-using GeoLocations.PostgreSQL.Models;
+using GeoLocations.Dao.Extensions;
+using GeoLocations.Dao.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -141,12 +141,16 @@ namespace GeoLocations.PostgreSQL.Repositories
 		
 		private async ValueTask CancellableBatchInsertAsync(IEnumerable<GeoLocation> items, CancellationToken? cancellationToken = null)
 		{
+			if (this.geoLocationOptions.BatchSize <= 0)
+			{
+				throw new ArgumentException("BatchSize must be greater than zero");
+			}
+			
 			try
 			{
-				const int BATCH_SIZE = 5000;
 				this.logger.Info("Data extracting...");
 				var entities = items.Select(x => x.ToEntity());
-				var batches = entities.Batch(BATCH_SIZE).ToArray();
+				var batches = entities.Batch(this.geoLocationOptions.BatchSize).ToArray();
 				
 				await using (var context = this.repositoryContextFactory.ResolveRepositoryContext())
 				{

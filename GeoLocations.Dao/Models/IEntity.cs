@@ -1,4 +1,4 @@
-namespace GeoLocations.PostgreSQL.Models
+namespace GeoLocations.Dao.Models
 {
 	public interface IEntity<out TIdentifier> where TIdentifier : notnull
 	{

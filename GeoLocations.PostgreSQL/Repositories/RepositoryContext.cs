@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using GeoLocations.PostgreSQL.Models;
+using GeoLocations.Dao.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GeoLocations.PostgreSQL.Repositories
@@ -27,6 +27,11 @@ namespace GeoLocations.PostgreSQL.Repositories
 		#endregion
 
 		#region Methods
+		
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			modelBuilder.Entity<GeoLocationEntity>().HasIndex(b => b.IP);
+		}
 
 		internal IEnumerable<string> GetTableNames()
 		{

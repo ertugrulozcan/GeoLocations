@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace GeoLocations.PostgreSQL.Models
+namespace GeoLocations.Dao.Models
 {
 	public abstract class EntityBase : IEntity<int>
 	{

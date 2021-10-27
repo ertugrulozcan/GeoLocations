@@ -7,6 +7,8 @@ namespace GeoLocations.Abstractions.Configuration
 		string Cron { get; set; }
 
 		string ConnectionString { get; set; }
+		
+		int BatchSize { get; set; }
 
 		#endregion
 	}

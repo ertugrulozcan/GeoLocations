@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GeoLocations.Core.Models;
-using Microsoft.EntityFrameworkCore;
 
-namespace GeoLocations.PostgreSQL.Models
+namespace GeoLocations.Dao.Models
 {
-	[Index(nameof(IP))]
 	public class GeoLocationEntity : EntityBase
 	{
 		#region Properties

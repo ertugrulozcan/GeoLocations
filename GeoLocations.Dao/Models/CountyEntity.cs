@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GeoLocations.PostgreSQL.Models
+namespace GeoLocations.Dao.Models
 {
 	[Table("Counties")]
 	public class CountyEntity : LocalizedEntityBase<CountyNamesEntity>

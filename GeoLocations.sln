@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoLocations.Extensions.AspNetCore", "GeoLocations.Extensions.AspNetCore\GeoLocations.Extensions.AspNetCore.csproj", "{9E492E38-7218-4784-82FC-E87024875528}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoLocations.Dapper", "GeoLocations.Dapper\GeoLocations.Dapper.csproj", "{7FE2156A-B3B7-4836-A946-083C11043206}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{9E492E38-7218-4784-82FC-E87024875528}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E492E38-7218-4784-82FC-E87024875528}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E492E38-7218-4784-82FC-E87024875528}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FE2156A-B3B7-4836-A946-083C11043206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FE2156A-B3B7-4836-A946-083C11043206}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FE2156A-B3B7-4836-A946-083C11043206}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FE2156A-B3B7-4836-A946-083C11043206}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{932F5BA6-C685-4CFA-B4CD-564B5601CF93} = {1564357B-78E5-4B16-A314-B7F25DC1A814}
@@ -74,5 +80,6 @@ Global
 		{28F4AD7D-6C3B-43A8-A95C-9C3F6CD6010C} = {0388FF21-1A77-4712-8337-F2EC3525209F}
 		{AEAC38BF-FD0E-44EE-9AAC-A0EEE4FDDFA3} = {A8C85321-2B3D-45A5-AAB1-7DFC581922E8}
 		{9E492E38-7218-4784-82FC-E87024875528} = {34672BF7-FB23-4AB0-A3B2-AC25D2C14690}
+		{7FE2156A-B3B7-4836-A946-083C11043206} = {0388FF21-1A77-4712-8337-F2EC3525209F}
 	EndGlobalSection
 EndGlobal

@@ -12,6 +12,7 @@ namespace GeoLocations.Infrastructure.Services
 		#region Services
 
 		private readonly IGeoLocationRepository repository;
+		private readonly IGeoLocationBatchWriterRepository writerRepository;
 
 		#endregion
 		
@@ -21,9 +22,11 @@ namespace GeoLocations.Infrastructure.Services
 		/// Constructor
 		/// </summary>
 		/// <param name="repository"></param>
-		public GeoLocationService(IGeoLocationRepository repository)
+		/// <param name="writerRepository"></param>
+		public GeoLocationService(IGeoLocationRepository repository, IGeoLocationBatchWriterRepository writerRepository)
 		{
 			this.repository = repository;
+			this.writerRepository = writerRepository;
 		}
 
 		#endregion
@@ -42,12 +45,12 @@ namespace GeoLocations.Infrastructure.Services
 
 		public async ValueTask LoadAsync(IEnumerable<GeoLocation> data)
 		{
-			await this.repository.BatchInsertAsync(data);
+			await this.writerRepository.BatchInsertAsync(data);
 		}
 		
 		public async ValueTask LoadAsync(IEnumerable<GeoLocation> data, CancellationToken cancellationToken)
 		{
-			await this.repository.BatchInsertAsync(data, cancellationToken);
+			await this.writerRepository.BatchInsertAsync(data, cancellationToken);
 		}
 
 		public async ValueTask LoadBinaryAsync(byte[] bytes)

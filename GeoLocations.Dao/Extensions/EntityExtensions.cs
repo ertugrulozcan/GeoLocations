@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using GeoLocations.Core.Models;
-using GeoLocations.PostgreSQL.Models;
+using GeoLocations.Dao.Models;
 
-namespace GeoLocations.PostgreSQL.Extensions
+namespace GeoLocations.Dao.Extensions
 {
 	public static class EntityExtensions
 	{
