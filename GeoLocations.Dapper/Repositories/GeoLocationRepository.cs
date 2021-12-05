@@ -80,15 +80,15 @@ namespace GeoLocations.Dapper.Repositories
 				
 				try
 				{
-					await SetTablesUnloggedMode(connection, tableNames);
-					this.logger.Info("Tables set as un-logged.");
-					
-					await DropIndexesAsync(connection, indexes);
-					this.logger.Info("All indexes are temporarily dropped.");
-					
 					await DropForeignKeysAsync(connection, foreignKeys);
 					this.logger.Info("Foreign key constraints are temporarily dropped.");
-					
+
+					await DropIndexesAsync(connection, indexes);
+					this.logger.Info("All indexes are temporarily dropped.");
+
+					await SetTablesUnloggedMode(connection, tableNames);
+					this.logger.Info("Tables set as un-logged.");
+
 					await DisableAllTriggersAsync(connection, tableNames);
 					this.logger.Info("All triggers are temporarily disabled.");
 					
@@ -110,8 +110,8 @@ namespace GeoLocations.Dapper.Repositories
 						await this.BulkInsertAsync(batch, connection);
 
 						var estimatedRemainingTime = TimeSpan.FromMilliseconds(stopwatch.Elapsed.TotalMilliseconds * (totalBatchCount - batchNo));
-						this.logger.Info(
-							$"Batch {batchNo++} completed (%{((batchNo - 1) * 100.0d / totalBatchCount):F2}) (Elapsed {stopwatch.Elapsed.ToHumanReadableString()}, Estimated remaining time {estimatedRemainingTime.ToHumanReadableString()})");
+						var completedPercentage = (batchNo - 1) * 100.0d / totalBatchCount;
+						this.logger.Info($"Batch {batchNo++} completed (%{completedPercentage:F2}) (Elapsed {stopwatch.Elapsed.ToHumanReadableString()}, Estimated remaining time {estimatedRemainingTime.ToHumanReadableString()})");
 						stopwatch.Restart();
 					}
 
@@ -125,17 +125,17 @@ namespace GeoLocations.Dapper.Repositories
 				}
 				finally
 				{
+					await EnableAllTriggersAsync(connection, tableNames);
+					this.logger.Info("Triggers enabled.");
+
+					await SetTablesLoggedMode(connection, tableNames);
+					this.logger.Info("Tables set as logged.");
+
 					await RecreateIndexesAsync(connection, indexes);
 					this.logger.Info("Indexes recreated.");
 					
 					await RecreateForeignKeysAsync(connection, foreignKeys);
 					this.logger.Info("Foreign keys recreated.");
-					
-					await EnableAllTriggersAsync(connection, tableNames);
-					this.logger.Info("Triggers enabled.");
-					
-					await SetTablesLoggedMode(connection, tableNames);
-					this.logger.Info("Tables set as logged.");
 				}
 			}
 		}

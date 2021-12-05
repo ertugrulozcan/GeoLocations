@@ -42,7 +42,7 @@ namespace GeoLocations.Extensions.AspNetCore
 				optionsLifetime: ServiceLifetime.Transient);
 			services.AddSingleton<PostgreSQL.Repositories.IRepositoryContextFactory, PostgreSQL.Repositories.RepositoryContextFactory>();
 			services.AddTransient<IGeoLocationRepository, PostgreSQL.Repositories.GeoLocationRepository>();
-			services.AddTransient<IGeoLocationBatchWriterRepository, Dapper.Repositories.GeoLocationRepository>();
+			services.AddTransient<IGeoLocationBatchWriterRepository, PostgreSQL.Repositories.GeoLocationRepository>();
 			services.AddScoped<IGeoLocationService, GeoLocationService>();
 			services.AddSingleton<IMasterDatabaseProvider, LocalStorageDatabaseProvider>();
 

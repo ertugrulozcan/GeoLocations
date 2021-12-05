@@ -154,6 +154,7 @@ namespace GeoLocations.PostgreSQL.Repositories
 				
 				await using (var context = this.repositoryContextFactory.ResolveRepositoryContext())
 				{
+					var totalBatchCount = batches.Length;
 					var batchNo = 1;
 					var stopwatch = Stopwatch.StartNew();
 					foreach (var batch in batches)
@@ -166,9 +167,10 @@ namespace GeoLocations.PostgreSQL.Repositories
 						{
 							await BatchInsertAsync(context, batch, cancellationToken.Value);	
 						}
-						
-						this.logger.Info($"Batch {batchNo++} completed (Elapsed {stopwatch.Elapsed.ToHumanReadableString()})");
-						this.logger.Info($"Completed %{((batchNo - 1) * 100.0d / batches.Length):F2}");
+
+						var estimatedRemainingTime = TimeSpan.FromMilliseconds(stopwatch.Elapsed.TotalMilliseconds * (totalBatchCount - batchNo));
+						var completedPercentage = (batchNo - 1) * 100.0d / totalBatchCount;
+						this.logger.Info($"Batch {batchNo++} completed (%{completedPercentage:F2}) (Elapsed {stopwatch.Elapsed.ToHumanReadableString()}, Estimated remaining time {estimatedRemainingTime.ToHumanReadableString()})");
 						stopwatch.Restart();
 					}
 				}
